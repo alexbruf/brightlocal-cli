@@ -1,0 +1,49 @@
+name: wasm-ci
+
+# Builds the TinyGo wasm package and smoke-tests it. This is the safety net for
+# the upstream-tracking workflow: if a merged upstream change breaks the wasm
+# build (e.g. the client's public API changed), this fails the PR.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "cmd/wasm/**"
+      - "internal/**"
+      - "wasm/**"
+      - "go.mod"
+      - ".github/workflows/wasm-ci.yml"
+  pull_request:
+    paths:
+      - "cmd/wasm/**"
+      - "internal/**"
+      - "wasm/**"
+      - "go.mod"
+      - ".github/workflows/wasm-ci.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Set up TinyGo
+        uses: acifani/setup-tinygo@v2
+        with:
+          tinygo-version: "0.41.1"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Build wasm + JS package
+        run: ./wasm/build.sh
+
+      - name: Smoke test
+        run: node wasm/smoke-test.mjs
