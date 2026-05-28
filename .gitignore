@@ -40,6 +40,18 @@ Thumbs.db
 # Tools
 .tools/
 
+# Wrangler / Cloudflare Workers local dev
+.dev.vars
+.wrangler/
+node_modules/
+
+# Generated wasm artifacts (rebuilt by ./wasm/build.sh; npm publish still
+# includes them via package.json "files"). Kept out of git so merges and
+# history stay clean.
+wasm/brightlocal.wasm
+wasm/wasm_exec.js
+cmd/wasm/buildinfo_gen.go
+
 # Credentials (never commit these!)
 credentials.json
 tokens.json

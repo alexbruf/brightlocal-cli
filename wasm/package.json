@@ -1,0 +1,76 @@
+{
+  "name": "@viewengine/brightlocal-wasm",
+  "version": "0.1.0",
+  "description": "BrightLocal CLI compiled to WebAssembly with a JS wrapper. Works in Cloudflare Workers, Node.js, and edge runtimes.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alexbruf/brightlocal-cli.git",
+    "directory": "wasm"
+  },
+  "homepage": "https://github.com/alexbruf/brightlocal-cli/tree/main/wasm#readme",
+  "bugs": "https://github.com/alexbruf/brightlocal-cli/issues",
+  "keywords": [
+    "brightlocal",
+    "wasm",
+    "webassembly",
+    "cloudflare-workers",
+    "tinygo",
+    "local-seo"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "bash ./build.sh",
+    "test": "node ./smoke-test.mjs"
+  },
+  "module": "./workerd.js",
+  "types": "./index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    "./brightlocal.wasm": "./brightlocal.wasm",
+    ".": {
+      "workerd": {
+        "types": "./index.d.ts",
+        "import": "./workerd.js"
+      },
+      "edge-light": {
+        "types": "./index.d.ts",
+        "import": "./edge-light.js"
+      },
+      "node": {
+        "types": "./index.d.ts",
+        "import": "./node.js"
+      },
+      "default": {
+        "types": "./index.d.ts",
+        "import": "./node.js"
+      }
+    },
+    "./workerd": {
+      "types": "./index.d.ts",
+      "import": "./workerd.js"
+    },
+    "./edge-light": {
+      "types": "./index.d.ts",
+      "import": "./edge-light.js"
+    },
+    "./node": {
+      "types": "./index.d.ts",
+      "import": "./node.js"
+    }
+  },
+  "files": [
+    "runtime.js",
+    "workerd.js",
+    "node.js",
+    "edge-light.js",
+    "wasm_exec.js",
+    "index.d.ts",
+    "brightlocal.wasm",
+    "README.md"
+  ]
+}

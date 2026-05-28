@@ -1,0 +1,15 @@
+name = "brightlocal-wasm-example"
+main = "worker.js"
+compatibility_date = "2024-09-23"
+
+# Treat .wasm imports as compiled WebAssembly modules (resolved to a
+# WebAssembly.Module at build time, which is what workerd.js expects).
+[[rules]]
+type = "CompiledWasm"
+globs = ["**/*.wasm"]
+fallthrough = true
+
+# Provide the API key as a secret, not here:
+#   wrangler secret put BRIGHTLOCAL_API_KEY
+# For local `wrangler dev`, put it in .dev.vars (gitignored):
+#   echo 'BRIGHTLOCAL_API_KEY = "your-key"' > .dev.vars

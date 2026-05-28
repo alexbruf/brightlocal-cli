@@ -1,0 +1,79 @@
+name: wasm-release
+
+# Builds the TinyGo wasm package on a v* tag and publishes it to npm as
+# @viewengine/brightlocal-wasm, plus attaches a tarball to the GitHub release.
+#
+# Publishing uses npm Trusted Publishers (OIDC) — no NPM_TOKEN secret. One-time
+# setup on npmjs.com: in the @viewengine org, add a Trusted Publisher for the
+# package pointing at this repo + the "wasm-release.yml" workflow. Until that's
+# configured the publish step will fail (the build/smoke-test still run).
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to (re)publish (e.g. v0.1.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: write # attach the tarball to the GitHub release
+  id-token: write # npm trusted publishing (OIDC) + provenance
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.tag || github.ref }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Set up TinyGo
+        uses: acifani/setup-tinygo@v2
+        with:
+          tinygo-version: "0.41.1"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Upgrade npm (Trusted Publishing support, >= 11.5.1)
+        run: npm install -g npm@latest
+
+      - name: Build wasm + JS package
+        run: ./wasm/build.sh
+
+      - name: Smoke test
+        run: node wasm/smoke-test.mjs
+
+      - name: Set package version from tag
+        working-directory: wasm
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          npm version "${TAG#v}" --no-git-tag-version --allow-same-version
+
+      - name: Publish to npm
+        working-directory: wasm
+        run: npm publish
+
+      - name: Pack tarball
+        working-directory: wasm
+        run: npm pack
+
+      - name: Attach tarball to GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: wasm/*.tgz
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
