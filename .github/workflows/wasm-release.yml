@@ -70,10 +70,22 @@ jobs:
         working-directory: wasm
         run: npm pack
 
+      # The Go binary release (goreleaser) runs on the same v* tag and also
+      # creates the GitHub release. Don't race it: wait for the release to
+      # exist, create it only if it never appears, then upload the tarball
+      # idempotently. `gh release upload --clobber` is safe on re-runs.
       - name: Attach tarball to GitHub release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: wasm/*.tgz
-          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+        working-directory: wasm
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          for i in $(seq 1 24); do
+            if gh release view "$TAG" >/dev/null 2>&1; then
+              echo "release $TAG exists"; break
+            fi
+            echo "waiting for release $TAG ($i)..."; sleep 5
+          done
+          gh release view "$TAG" >/dev/null 2>&1 || \
+            gh release create "$TAG" --title "$TAG" --notes "wasm + JS package release"
+          gh release upload "$TAG" *.tgz --clobber
