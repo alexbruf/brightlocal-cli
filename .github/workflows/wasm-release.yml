@@ -62,9 +62,9 @@ jobs:
           TAG="${{ github.event.inputs.tag || github.ref_name }}"
           npm version "${TAG#v}" --no-git-tag-version --allow-same-version
 
-      - name: Publish to npm
+      - name: Publish to npm (provenance via OIDC)
         working-directory: wasm
-        run: npm publish
+        run: npm publish --provenance
 
       - name: Pack tarball
         working-directory: wasm
